@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mzansi Wethu Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .chat-container {
+            width: 300px;
+            height: 500px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+        .chat-header {
+            background-color: #231a6f;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .message {
+            color: white;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            max-width: 70%;
+        }
+        .user-message {
+            background-color: #183d9b;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .bot-message {
+            background-color: #231a6f;
+            align-self: flex-start;
+        }
+        .chat-input {
+            display: flex;
+            padding: 10px;
+        }
+        #user-input {
+            flex: 1;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
+        #send-button {
+            margin-left: 5px;
+            padding: 5px 10px;
+            background-color: #0f054c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">Mzansi Wethu Chatbot</div>
+        <div id="chat-messages" class="chat-messages"></div>
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your message...">
+            <button id="send-button">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        let currentState = 'initial';
+        let tempData = {};
+
+        function addMessage(message, isUser = false) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(isUser ? 'user-message' : 'bot-message');
+            messageElement.textContent = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function handleUserInput(input) {
+            addMessage(input, true);
+
+            switch (currentState) {
+                case 'initial':
+                    if (input.toLowerCase() === 'hello') {
+                        addMessage("Hello! Welcome to Mzansi Wethu's services. Select a number below corresponding to your need.");
+                        addMessage("1. What's my ward?\n 2. Find your councilor\n  3. Report community issues \n4. Inquire about the next meeting \n 5. Choose a different language");
+                        currentState = 'menu';
+                    } else {
+                        addMessage("Invalid input. To return to the main menu type 'hello' and press send.");
+                    }
+                    break;
+                case 'menu':
+                    handleMenuSelection(input);
+                    break;
+                case 'ward_address':
+                    // Use Ayoba API to get ward number based on address
+                    getWardID(input);
+                    break;
+                case 'councilor_ward':
+                    // Use Ayoba API to get councilor details based on ward number
+                    getCouncilorDetails(input);
+                    break;
+                case 'report_location':
+                    tempData.location = input;
+                    addMessage("Please enter your Ward Number:");
+                    currentState = 'report_ward';
+                    break;
+                case 'report_ward':
+                    tempData.ward = input;
+                    addMessage("Please describe the problem:");
+                    currentState = 'report_problem';
+                    break;
+                case 'report_problem':
+                    tempData.problem = input;
+                    // Use Ayoba API to submit the report
+                    submitReport(tempData);
+                    break;
+                case 'meeting_ward':
+                    // Use Ayoba API to get next meeting details based on ward number
+                    getNextMeetingDetails(input);
+                    break;
+                case 'language':
+                    // Use Ayoba API to get next meeting details based on ward number
+                    addMessage("1.");
+                    currentState = 'chosenLanguage';
+                    break;
+            }
+        }
+
+        function handleMenuSelection(input) {
+            switch (input) {
+                case '1':
+                    addMessage("Please enter your street address:");
+                    currentState = 'ward_address';
+                    break;
+                case '2':
+                    addMessage("Please enter your Ward ID:");
+                    currentState = 'councilor_ward';
+                    break;
+                case '3':
+                    addMessage("Please enter the location:");
+                    currentState = 'report_location';
+                    break;
+                case '4':
+                    addMessage("Please enter your Ward Number:");
+                    currentState = 'meeting_ward';
+                    break;
+                case '5':
+                    addMessage("Use a different language:");
+                    currentState = 'language';
+                    break;
+                default:
+                    addMessage("Invalid selection. Please choose a number between 1 and 5.");
+            }
+        }
+
+        // Ayoba API  functions 
+        function getWardID(address) {
+            // API call
+            setTimeout(() => {
+                addMessage(`Your ward ID is: 93607032 `);
+                currentState = 'initial';
+            }, 1000);
+        }
+
+        function getCouncilorDetails(wardID) {
+            // API call
+            setTimeout(() => {
+                addMessage(`Councillor: Solly Mashishi\nSubcouncil: 5\nParty: ANC\nCell No: 066-435-3830\nEmail: Lucas.mashishi@mokopane.gov.za`);
+                currentState = 'initial';
+            }, 1000);
+        }
+
+        function submitReport(data) {
+            // API call
+            setTimeout(() => {
+                addMessage(`Report successfully created for ${data.location} in Ward ${data.ward}`);
+                currentState = 'initial';
+            }, 1000);
+        }
+
+        function getNextMeetingDetails(WardID) {
+            //  API call
+            setTimeout(() => {
+                addMessage(`Next meeting for Ward ${WardID}:\nDate: May 15, 2024\nTime: 18:00\nLocation: Madingwana Taxi Rank`);
+                currentState = 'initial';
+            }, 1000);
+        }
+
+        //Bothlale API Calls
+       // functon translateText(language, chosenLanguage, text){
+        //setTimeout(() => {
+        //addMessage(` ${language, chosenLanguage, text}`); 
+       // }
+
+        sendButton.addEventListener('click', () => {
+            const message = userInput.value.trim();
+            if (message) {
+                handleUserInput(message);
+                userInput.value = '';
+            }
+        });
+
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+
+        // Initial greeting
+        addMessage("Welcome to Mzansi Wethu's chatbot. Please type and send 'hello' to start.");
+    </script>
+</body>
+</html>
